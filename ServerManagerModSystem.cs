@@ -5,6 +5,7 @@ using ServerManager.Utils;
 using ServerManager.Models;
 using System;
 using ServerManager.Logger;
+using ServerManager.Server;
 
 [assembly: ModInfo("ServerManager", "servermanager",
                     Authors = new string[] { "julianfere_" },
@@ -18,6 +19,7 @@ namespace ServerManager
         private ICoreServerAPI _serverApi;
         private JsonDataManager<ServerData> _jsonDataManager;
         private ServerLogger _logger;
+        private WebServer _webServer;
 
         internal const string ConfigFile = "ServerManager.json";
         internal static ServerManagerConfig Config { get; set; } = null!;
@@ -25,6 +27,16 @@ namespace ServerManager
         {
             _serverApi = api;
             _logger = new ServerLogger(Mod.Logger);
+            _webServer = new WebServer(_logger);
+
+            try
+            {
+                _webServer.StartAsync();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Error starting web server: " + e.Message);
+            }
 
             try
             {
@@ -32,7 +44,7 @@ namespace ServerManager
             }
             catch (Exception e)
             {
-                Mod.Logger.Error("Error loading config: " + e.Message);
+                _logger.LogError("Error loading config: " + e.Message);
             }
 
             Config ??= new ServerManagerConfig();
@@ -55,8 +67,14 @@ namespace ServerManager
             }
             catch (Exception e)
             {
-                Mod.Logger.Error("Error registering events: " + e.Message);
+                _logger.LogError("Error registering events: " + e.Message);
             }
+        }
+
+        public override void Dispose()
+        {
+            _webServer?.StopAsync();
+            base.Dispose();
         }
 
         private void PullServerData(float _)
@@ -76,7 +94,7 @@ namespace ServerManager
             }
             catch (Exception e)
             {
-                Mod.Logger.Error("Error updating server data: " + e.Message);
+                _logger.LogError("Error updating server data: " + e.Message);
             }
         }
     }

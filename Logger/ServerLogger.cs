@@ -30,17 +30,22 @@ namespace ServerManager.Logger
 
         public void OnServerSuspend()
         {
-            LogServerEvent("Server Suspended");
+            LogServerEvent("[Server Manager Mod] Server Suspended");
         }
 
         public void LogError(string message)
         {
-            _logger.Error(message);
+            _logger.Error("[Server Manager Mod] " + message);
+        }
+
+        public void Log(string message)
+        {
+            _logger.Notification("[Server Manager Mod] " + message);
         }
 
         public EnumSuspendState OnServerResume()
         {
-            LogServerEvent("Server Resumed");
+            LogServerEvent("[Server Manager Mod] Server Resumed");
             
             return EnumSuspendState.Ready;
         }
@@ -48,14 +53,14 @@ namespace ServerManager.Logger
         private void LogPlayerEvent(string eventType, IServerPlayer player)
         {
             _logger.Notification("==========================================================================================");
-            _logger.Notification($"{eventType} - Player: {player.PlayerName}, {player.PlayerUID}");
+            _logger.Notification($"[Server Manager Mod] {eventType} - Player: {player.PlayerName}, {player.PlayerUID}");
             _logger.Notification("==========================================================================================");
         }
 
         private void LogServerEvent(string message)
         {
             _logger.Notification("==========================================================================================");
-            _logger.Notification(message);
+            _logger.Notification("[Server Manager Mod] " + message);
             _logger.Notification("==========================================================================================");
         }
     }

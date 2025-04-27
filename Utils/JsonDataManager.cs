@@ -36,7 +36,6 @@ namespace ServerManager.Utils
         {
             if (!File.Exists(_filePath))
             {
-                // Aquí podemos devolver la instancia existente (para ServerData sería ServerData.Instance)
                 return default;
             }
 
@@ -55,8 +54,7 @@ namespace ServerManager.Utils
 
         public void Update(Action<T> updateAction)
         {
-            // Cargar la instancia existente
-            T data = Load() ?? Activator.CreateInstance<T>(); // Usamos CreateInstance si no se encontró nada
+            T data = Load() ?? Activator.CreateInstance<T>();
             updateAction(data);
             Save(data);
         }
