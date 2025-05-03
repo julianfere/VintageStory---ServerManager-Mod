@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.IO;
 using System;
+using ServerManager.Models;
 
 namespace ServerManager.Utils
 {
@@ -54,7 +55,7 @@ namespace ServerManager.Utils
 
         public void Update(Action<T> updateAction)
         {
-            T data = Load() ?? Activator.CreateInstance<T>();
+            T data = Load() ?? ServerData.Instance as T;
             updateAction(data);
             Save(data);
         }

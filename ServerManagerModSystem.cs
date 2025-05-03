@@ -26,17 +26,6 @@ namespace ServerManager
         public override void StartServerSide(ICoreServerAPI api)
         {
             _serverApi = api;
-            _logger = new ServerLogger(Mod.Logger);
-            _webServer = new WebServer(_logger);
-
-            try
-            {
-                _webServer.StartAsync();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError("Error starting web server: " + e.Message);
-            }
 
             try
             {
@@ -48,8 +37,20 @@ namespace ServerManager
             }
 
             Config ??= new ServerManagerConfig();
-
             _jsonDataManager = new JsonDataManager<ServerData>(Config.DataPath, "serverdata.json");
+
+            _logger = new ServerLogger(Mod.Logger);
+            _webServer = new WebServer(_logger,_jsonDataManager);
+
+            try
+            {
+                _webServer.StartAsync();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Error starting web server: " + e.Message);
+            }
+
             ServerEventListener listener = new(_serverApi, _logger, _jsonDataManager);
 
             try
@@ -63,7 +64,7 @@ namespace ServerManager
                     listener.OnServerSuspend();
                     return EnumSuspendState.Ready;
                 };
-                _serverApi.Event.RegisterGameTickListener(PullServerData, 5000);
+                _serverApi.Event.RegisterGameTickListener(PullServerData, 3000);
             }
             catch (Exception e)
             {
@@ -90,6 +91,10 @@ namespace ServerManager
                     int hour = (int)floatHour;
                     int minutes = (int)((floatHour - hour) * 60);
                     data.WorldData.Time = $"{hour}:{minutes}hs";
+                    data.UpTimeInSeconds = _serverApi.Server.TotalWorldPlayTime;
+                    data.TotalPlayTimeInSeconds = _serverApi.Server.ServerUptimeSeconds;
+                    data.WorldData.Name = _serverApi.WorldManager.SaveGame.WorldName;
+                    data.Update(data);
                 });
             }
             catch (Exception e)
