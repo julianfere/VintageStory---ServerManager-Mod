@@ -18,6 +18,7 @@
   </ItemGroup>
 	
   <ItemGroup>
+    <Folder Include="command\subcommands\" />
     <Folder Include="Data\" />
   </ItemGroup>
 

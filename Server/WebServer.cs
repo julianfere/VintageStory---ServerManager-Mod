@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using ServerManager.Logger;
 using ServerManager.Models;
 using ServerManager.Utils;
+using Vintagestory.API.Common;
 
 namespace ServerManager.Server
 {
@@ -14,10 +15,12 @@ namespace ServerManager.Server
         private HttpListener _httpListener;
         private readonly ServerLogger _logger;
         private readonly JsonDataManager<ServerData> _store;
+        private readonly ServerManager _serverManager;
 
-        public WebServer(ServerLogger logger, JsonDataManager<ServerData> store)
+        public WebServer(ServerManager serverManager,ServerLogger logger, JsonDataManager<ServerData> store)
         {
-            _logger = logger;
+            _serverManager = serverManager ?? throw new ArgumentNullException(nameof(serverManager));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _store = store ?? throw new ArgumentNullException(nameof(store));
         }
 
@@ -54,10 +57,19 @@ namespace ServerManager.Server
 
             response.Headers.Add("Access-Control-Allow-Origin", "*");
             response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-            response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+            response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
 
             try
             {
+
+                if (context.Request.HttpMethod == "OPTIONS")
+                {
+                    response.StatusCode = 204; // No Content
+                    response.OutputStream.Close();
+                    return;
+                }
+
                 if (context.Request.Url.AbsolutePath == "/api/ping")
                 {
                     response.ContentType = "application/json";
@@ -71,6 +83,34 @@ namespace ServerManager.Server
                 else if (context.Request.Url.AbsolutePath == "/api/serverdata")
                 {
                     await StartSseStream(context); // no cerrar aquí, se maneja dentro
+                } else if (context.Request.Url.AbsolutePath == "/api/backup" && context.Request.HttpMethod == "POST")
+                {
+
+                    var responseString = "";
+
+                    this._serverManager.ServerAPI.ChatCommands.ExecuteUnparsed($"/genbackup save-{DateTime.Now}",null, (result) =>
+                    {
+                        if (result.Status == EnumCommandStatus.Success)
+                        {
+                            responseString = "{\"status\":\"ok\"}";
+                            response.StatusCode = 200;
+                            _store.Update(data =>
+                            {
+                                data.WorldData.LastBackup = DateTime.Now;   
+                            });
+                        }
+                        else
+                        {
+                            responseString = "{\"status\":\"error\"}";
+                            response.StatusCode = 500;
+                        }
+                    });
+
+
+                    var buffer = Encoding.UTF8.GetBytes(responseString);
+                    response.ContentLength64 = buffer.Length;
+                    await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+                    response.OutputStream.Close();
                 }
                 else
                 {

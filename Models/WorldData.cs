@@ -1,4 +1,6 @@
-﻿namespace ServerManager.Models
+﻿using System;
+
+namespace ServerManager.Models
 {
     public class WorldData
     {
@@ -7,5 +9,7 @@
         public int Year { get; set; } = 0;
         public int Day { get; set; } = 0;
         public string Time { get; set; } = string.Empty;
+        public DateTime LastSaved { get; set; } = DateTime.MinValue;
+        public DateTime LastBackup { get; set; } = DateTime.MinValue;
     }
 }

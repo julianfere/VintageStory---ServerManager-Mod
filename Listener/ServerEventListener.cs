@@ -130,7 +130,7 @@ namespace ServerManager.Listener
                 _logger.LogError("Failed to update server state in store: " + ex.Message);
 
             }
-           return EnumSuspendState.Ready;
+            return EnumSuspendState.Ready;
         }
 
         public void OnServerSuspend()
@@ -147,6 +147,21 @@ namespace ServerManager.Listener
             catch (Exception ex)
             {
                 _logger.LogError("Failed to update server state in store: " + ex.Message);
+            }
+        }
+
+        public void OnGameWorldSaved()
+        {
+            try
+            {
+                _store.Update(oldData =>
+                {
+                    oldData.WorldData.LastSaved = DateTime.Now;
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Failed to update server time in store: " + ex.Message);
             }
         }
     }
