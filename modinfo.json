@@ -1,0 +1,9 @@
+{
+    "type": "code",
+    "name": "ServerManager",
+    "modid": "servermanager",
+    "version": "1.0.0",
+    "description": "desc",
+    "authors": [ "Venocancer" ],
+    "requiredOnClient": false
+}

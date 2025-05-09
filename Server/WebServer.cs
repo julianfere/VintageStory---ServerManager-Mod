@@ -58,9 +58,16 @@ namespace ServerManager.Server
         {
             var response = context.Response;
             string urlPath = context.Request.Url.AbsolutePath.TrimStart('/');
+
+            if (urlPath == "/" || urlPath == "")
+            {
+                urlPath = "index.html";
+            }
+
             string modDir = Path.GetDirectoryName(_modPath) ?? "";
-            string staticRoot = Path.Combine(modDir, "wwwroot");
-            string filePath = Path.Combine(staticRoot, urlPath);
+            string filePath = Path.Join(modDir, "wwwroot", urlPath);
+
+
 
             response.Headers.Add("Access-Control-Allow-Origin", "*");
             response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -78,8 +85,6 @@ namespace ServerManager.Server
                 }
 
 
-                _logger.Log($"Serving file: {filePath}");
-                _logger.Log($"Existe? {File.Exists(filePath).ToString()}");
                 if (File.Exists(filePath))
                 {
                     byte[] content = await File.ReadAllBytesAsync(filePath);

@@ -20,7 +20,10 @@
   <ItemGroup>
     <Folder Include="command\subcommands\" />
     <Folder Include="Data\" />
-    <Folder Include="Server\wwwroot\" />
+	  <Content Include="Server\wwwroot\**\*">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		  <Link>wwwroot\%(RecursiveDir)%(Filename)%(Extension)</Link>
+	  </Content>
   </ItemGroup>
 
 </Project>
