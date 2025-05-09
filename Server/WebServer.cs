@@ -67,8 +67,6 @@ namespace ServerManager.Server
             string modDir = Path.GetDirectoryName(_modPath) ?? "";
             string filePath = Path.Join(modDir, "wwwroot", urlPath);
 
-
-
             response.Headers.Add("Access-Control-Allow-Origin", "*");
             response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
             response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");

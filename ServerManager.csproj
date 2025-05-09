@@ -25,5 +25,15 @@
 		  <Link>wwwroot\%(RecursiveDir)%(Filename)%(Extension)</Link>
 	  </Content>
   </ItemGroup>
+	
+  <ItemGroup>
+    <None Remove="modinfo.json" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <EmbeddedResource Include="modinfo.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
 
 </Project>

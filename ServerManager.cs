@@ -1,9 +1,11 @@
 ﻿using System;
+using System.IO;
 using ServerManager.Listener;
 using ServerManager.Logger;
 using ServerManager.Models;
 using ServerManager.Server;
 using ServerManager.Utils;
+using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
 namespace ServerManager
@@ -39,7 +41,8 @@ namespace ServerManager
             }
 
             Config ??= new ServerManagerConfig();
-            _jsonDataManager = new JsonDataManager<ServerData>(Config.DataPath, "serverdata.json");
+
+            _jsonDataManager = new JsonDataManager<ServerData>(mod.Mod.SourcePath, "serverdata.json");
 
             _webServer = new WebServer(this,_logger, _jsonDataManager, _modSystem.Mod.SourcePath);
 

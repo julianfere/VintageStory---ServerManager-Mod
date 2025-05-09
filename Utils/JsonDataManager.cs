@@ -16,7 +16,9 @@ namespace ServerManager.Utils
 
         public JsonDataManager(string basePath, string fileName)
         {
-            _directoryPath = basePath;
+            string modDir = Path.GetDirectoryName(basePath) ?? "";
+
+            _directoryPath = Path.Combine(modDir,"Data");
             _filePath = Path.Combine(_directoryPath, fileName);
 
             EnsureDataDirectory();
@@ -25,6 +27,7 @@ namespace ServerManager.Utils
         private void EnsureDataDirectory()
         {
             Console.WriteLine("CHECKING DIRECTORY");
+            Console.WriteLine("Directory: " + _directoryPath);  
             if (!Directory.Exists(_directoryPath))
             {
                 Console.WriteLine("CREATING DIRECTORY");
