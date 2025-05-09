@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,12 +17,14 @@ namespace ServerManager.Server
         private readonly ServerLogger _logger;
         private readonly JsonDataManager<ServerData> _store;
         private readonly ServerManager _serverManager;
+        private readonly string _modPath;
 
-        public WebServer(ServerManager serverManager,ServerLogger logger, JsonDataManager<ServerData> store)
+        public WebServer(ServerManager serverManager,ServerLogger logger, JsonDataManager<ServerData> store, string modPath)
         {
             _serverManager = serverManager ?? throw new ArgumentNullException(nameof(serverManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _store = store ?? throw new ArgumentNullException(nameof(store));
+            _modPath = modPath ?? throw new ArgumentOutOfRangeException(nameof(modPath));
         }
 
         public void StartAsync()
@@ -54,6 +57,10 @@ namespace ServerManager.Server
         private async Task HandleRequestAsync(HttpListenerContext context)
         {
             var response = context.Response;
+            string urlPath = context.Request.Url.AbsolutePath.TrimStart('/');
+            string modDir = Path.GetDirectoryName(_modPath) ?? "";
+            string staticRoot = Path.Combine(modDir, "wwwroot");
+            string filePath = Path.Combine(staticRoot, urlPath);
 
             response.Headers.Add("Access-Control-Allow-Origin", "*");
             response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -70,7 +77,16 @@ namespace ServerManager.Server
                     return;
                 }
 
-                if (context.Request.Url.AbsolutePath == "/api/ping")
+
+                _logger.Log($"Serving file: {filePath}");
+                _logger.Log($"Existe? {File.Exists(filePath).ToString()}");
+                if (File.Exists(filePath))
+                {
+                    byte[] content = await File.ReadAllBytesAsync(filePath);
+                    context.Response.ContentType = GetMimeType(filePath);
+                    context.Response.ContentLength64 = content.Length;
+                    await context.Response.OutputStream.WriteAsync(content, 0, content.Length);
+                } else if (context.Request.Url.AbsolutePath == "/api/ping")
                 {
                     response.ContentType = "application/json";
                     var responseString = "{\"status\":\"ok\"}";
@@ -83,12 +99,13 @@ namespace ServerManager.Server
                 else if (context.Request.Url.AbsolutePath == "/api/serverdata")
                 {
                     await StartSseStream(context); // no cerrar aquí, se maneja dentro
-                } else if (context.Request.Url.AbsolutePath == "/api/backup" && context.Request.HttpMethod == "POST")
+                }
+                else if (context.Request.Url.AbsolutePath == "/api/backup" && context.Request.HttpMethod == "POST")
                 {
 
                     var responseString = "";
 
-                    this._serverManager.ServerAPI.ChatCommands.ExecuteUnparsed($"/genbackup save-{DateTime.Now}",null, (result) =>
+                    this._serverManager.ServerAPI.ChatCommands.ExecuteUnparsed($"/genbackup save-{DateTime.Now}", null, (result) =>
                     {
                         if (result.Status == EnumCommandStatus.Success)
                         {
@@ -96,7 +113,7 @@ namespace ServerManager.Server
                             response.StatusCode = 200;
                             _store.Update(data =>
                             {
-                                data.WorldData.LastBackup = DateTime.Now;   
+                                data.WorldData.LastBackup = DateTime.Now;
                             });
                         }
                         else
@@ -176,6 +193,22 @@ namespace ServerManager.Server
                 _httpListener.Stop();
                 _httpListener = null;
             }
+        }
+        private string GetMimeType(string filePath)
+        {
+            return Path.GetExtension(filePath).ToLower() switch
+            {
+                ".html" => "text/html",
+                ".js" => "application/javascript",
+                ".css" => "text/css",
+                ".json" => "application/json",
+                ".png" => "image/png",
+                ".jpg" => "image/jpeg",
+                ".jpeg" => "image/jpeg",
+                ".svg" => "image/svg+xml",
+                ".ico" => "image/x-icon",
+                _ => "application/octet-stream"
+            };
         }
     }
 }

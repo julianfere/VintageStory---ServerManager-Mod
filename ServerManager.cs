@@ -27,6 +27,7 @@ namespace ServerManager
         {
             _serverApi = api;
             _logger = new ServerLogger(api.Logger);
+            _modSystem = mod;
 
             try
             {
@@ -40,7 +41,7 @@ namespace ServerManager
             Config ??= new ServerManagerConfig();
             _jsonDataManager = new JsonDataManager<ServerData>(Config.DataPath, "serverdata.json");
 
-            _webServer = new WebServer(this,_logger, _jsonDataManager);
+            _webServer = new WebServer(this,_logger, _jsonDataManager, _modSystem.Mod.SourcePath);
 
             try
             {
